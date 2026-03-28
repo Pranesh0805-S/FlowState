@@ -1,0 +1,10 @@
+1️⃣ MySQL running
+2️⃣ python -m server.main   (Backend)
+3️⃣ python client/main.py   (Frontend)
+
+pranesh8506s@gmail.com
+pass : pranesh@08
+
+mysql -u root -p
+
+MySQL@8.p

@@ -1,0 +1,9 @@
+need to change the background color's in the login and register pages (buttons not the label)
+
+need to change the background of the login and register page either it can be an image or just pattern.
+
+need to implement an confirmation button when the task is going right or left (when the task changes it position on to the stages)
+
+need to implement an assign user button on to the team task 
+
+need to implement an notification system on to the desktop and also the email also

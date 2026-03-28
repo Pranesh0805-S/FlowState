@@ -1,0 +1,19 @@
+the things need to put it in the Frontend:
+
+the changes is that the moving kaban columns are not that much appropriate to handle (means the drag and drop is not working ) and we can continue the old version move right and move left concept so it is easy to move the task either right or left 
+
+need to remove the search bar
+
+need to put an indication mark while entering an wrong password or email (like it needs to show red colored indication or just need to put it as an pop up menu and then it needs to show "INVALID CREDENTIALS")
+
+need to put an indication mark while entering an new password or email (like it needs to show green colored indication or just need to put it as an pop up menu and it needs to show "SUCCESS FULLY REGISTERED")
+
+need to update in the history page that the task when it is created and when it is updated as completed or any other category need to be putted 
+
+the things need to put in the backend:
+
+need to put an additional function called delete task option (an optional one to put it )
+
+need to verify whether an account is an original account or not (like if an user is entering an email address like pranesh8506s@gmail.com it needs to send an random OTP confirmation to the particular mail they have entered in the register page and it need to confirm as the system has sent an random OTP and the OTP the user is entered is correct or not and then the account registeration is confirmed )(this gives us the unknown mails to be REGISTERED on to the application)(as i am saying it theoratically) and need to implement it strongly
+
+these are the minor changes need to be in the frontend and also in the backend

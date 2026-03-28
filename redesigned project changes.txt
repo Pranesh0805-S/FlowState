@@ -1,0 +1,8 @@
+- Adjust sidebar collapse animation speed
+- Improve task card shadow depth
+- Add hover highlight on Kanban columns
+- Improve spacing between dashboard cards
+- Replace emoji icons with SVG icons
+- Improve calendar highlight colors
+- Add smooth transition when switching pages
+- Fine-tune QSS primary color

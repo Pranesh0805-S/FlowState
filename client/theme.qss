@@ -1,0 +1,190 @@
+QWidget {
+  font-family: "Segoe UI";
+  font-size: 13px;
+  color: #101828;
+  background: #f3f5fb;
+}
+
+#HeroCard {
+  background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ffffff, stop:1 #eef2ff);
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+}
+
+QLabel#HeroTitle {
+  font-size: 42px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+QLabel#SectionHeader {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+QLabel#Muted {
+  color: #667085;
+}
+
+#Sidebar {
+  background: #101828;
+  border-top-right-radius: 18px;
+  border-bottom-right-radius: 18px;
+}
+
+QPushButton#SidebarToggle {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: left;
+}
+
+QPushButton#SidebarNavBtn {
+  background: transparent;
+  color: #d0d5dd;
+  border: none;
+  border-radius: 12px;
+  text-align: left;
+  padding: 10px 12px;
+}
+
+QPushButton#SidebarNavBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+QPushButton#SidebarNavBtn[active="true"] {
+  background: #5b6eff;
+  color: #ffffff;
+}
+
+#TopNavBar {
+  background: #ffffff;
+  border-bottom: 1px solid #eaecf0;
+}
+
+QLabel#TopNavTitle {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+QPushButton#TopIconBtn {
+  background: #ffffff;
+  border: 1px solid #d0d5dd;
+  border-radius: 20px;
+}
+
+QPushButton#TopAvatarBtn {
+  background: #5b6eff;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+#Card, #BoardColumn, #TaskListCard, #ActivityRow, #KanbanColumn, #AuthCard {
+  background: #ffffff;
+  border: 1px solid #eaecf0;
+  border-radius: 12px;
+}
+
+QPushButton {
+  border-radius: 12px;
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  padding: 10px 14px;
+}
+
+QPushButton:hover {
+  background: #f9fafb;
+}
+
+QPushButton#PrimaryBtn {
+  background: #5b6eff;
+  border: 1px solid #5b6eff;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+QPushButton#PrimaryBtn:hover {
+  background: #4c5fff;
+}
+
+QPushButton#SecondaryBtn {
+  background: #ffffff;
+  border: 1px solid #5b6eff;
+  color: #5b6eff;
+  font-weight: 600;
+}
+
+QPushButton#GradientBtn {
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #5b6eff, stop:1 #4f46e5);
+}
+
+QPushButton#GradientBtn:hover {
+  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4f46e5, stop:1 #4338ca);
+}
+
+QPushButton#LinkBtn {
+  border: none;
+  background: transparent;
+  color: #5b6eff;
+  padding: 4px 6px;
+}
+
+QPushButton#LinkBtn:hover {
+  text-decoration: underline;
+}
+
+QLineEdit, QTextEdit, QComboBox, QDateEdit, QSpinBox {
+  background: #ffffff;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+QLineEdit:focus, QTextEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus {
+  border: 1px solid #5b6eff;
+}
+
+QScrollArea {
+  border: none;
+  background: transparent;
+}
+
+#ProfileAvatar {
+  background: #5b6eff;
+  color: #ffffff;
+  border-radius: 48px;
+  font-size: 34px;
+  font-weight: 800;
+}
+
+#KanbanTaskCard {
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 12px;
+}
+
+QLabel#TaskCardTitle {
+  font-weight: 700;
+}
+
+QLabel#TaskCardMeta {
+  color: #667085;
+}
+
+QLabel#TaskPriorityBadge {
+  background: #eef2ff;
+  color: #374151;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+}
