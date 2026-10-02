@@ -21,6 +21,7 @@ class RegisterScreen(BaseScreen):
 
     def __init__(self, app_window, api):
         super().__init__(app_window, api)
+        self.setObjectName("AuthPage")
         self.pending_name = ""
         self.pending_email = ""
 

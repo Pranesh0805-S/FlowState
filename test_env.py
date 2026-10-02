@@ -1,9 +1,10 @@
-from dotenv import load_dotenv
+"""Check SMTP configuration without printing credential values."""
 import os
+from pathlib import Path
 
-load_dotenv()
+from dotenv import load_dotenv
 
-print("EMAIL:", os.getenv("PRODUCTIVITY_SMTP_EMAIL"))
-print("PASSWORD:", os.getenv("PRODUCTIVITY_SMTP_APP_PASSWORD"))
-print("HOST:", os.getenv("PRODUCTIVITY_SMTP_HOST"))
-print("PORT:", os.getenv("PRODUCTIVITY_SMTP_PORT"))
+env_local = Path(__file__).resolve().with_name(".env.local")
+load_dotenv(env_local if env_local.exists() else Path(__file__).resolve().with_name(".env"))
+for key in ("PRODUCTIVITY_SMTP_EMAIL", "PRODUCTIVITY_SMTP_APP_PASSWORD"):
+    print(f"{key}: {'configured' if os.getenv(key) else 'not configured'}")

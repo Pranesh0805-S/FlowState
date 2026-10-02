@@ -1,5 +1,9 @@
+from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv()
+
+_project_root = Path(__file__).resolve().parents[1]
+_local_env = _project_root / ".env.local"
+load_dotenv(_local_env if _local_env.exists() else _project_root / ".env")
 
 from typing import Any, Dict
 
@@ -57,6 +61,10 @@ def handle_request(action: str, payload: Dict[str, Any]) -> Dict[str, Any]:
                 email=payload.get("email", ""),
                 new_password=payload.get("new_password", ""),
             )
+        if action == "auth.send_password_reset_otp":
+            return auth.send_password_reset_otp(payload.get("email", ""))
+        if action == "auth.verify_password_reset_otp":
+            return auth.verify_password_reset_otp(payload.get("email", ""), payload.get("otp", ""))
 
         # ── Everything below requires a valid token ───────────────────────
         auth_res = _require_auth(payload)
@@ -84,23 +92,23 @@ def handle_request(action: str, payload: Dict[str, Any]) -> Dict[str, Any]:
             p["user_id"] = user_id
             return tasks.create_task(p)
         if action == "tasks.update":
-            return tasks.update_task(int(payload.get("task_id", 0)), payload)
+            return tasks.update_task(user_id, int(payload.get("task_id", 0)), payload)
         if action == "tasks.move":
-            return tasks.move_task(int(payload.get("task_id", 0)), payload.get("status", ""))
+            return tasks.move_task(user_id, int(payload.get("task_id", 0)), payload.get("status", ""))
         if action == "tasks.delete":
-            return tasks.delete_task(int(payload.get("task_id", 0)))
+            return tasks.delete_task(user_id, int(payload.get("task_id", 0)))
         if action == "tasks.list":
             return tasks.list_tasks(user_id)
 
         # ── Teams ─────────────────────────────────────────────────────────
         if action == "teams.create":
-            return teams.create_team(payload.get("name", ""))
+            return teams.create_team(user_id, payload.get("name", ""))
         if action == "teams.assign_member":
-            return teams.assign_member(int(payload.get("team_id", 0)), int(payload.get("user_id", 0)))
+            return teams.assign_member(user_id, int(payload.get("team_id", 0)), int(payload.get("user_id", 0)))
         if action == "teams.assign_task":
-            return teams.assign_task(int(payload.get("team_id", 0)), int(payload.get("task_id", 0)))
+            return teams.assign_task(user_id, int(payload.get("team_id", 0)), int(payload.get("task_id", 0)))
         if action == "teams.list_team_tasks":
-            return teams.list_team_tasks(int(payload.get("team_id", 0)))
+            return teams.list_team_tasks(user_id, int(payload.get("team_id", 0)))
         if action == "teams.list_for_user":
             return teams.list_teams_for_user(user_id)
 

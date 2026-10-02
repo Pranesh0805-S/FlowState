@@ -2,20 +2,29 @@
 __pycache__/
 *.pyc
 *.pyo
+*.py[cod]
 
-# Virtual Environment
+# Virtual environments
 venv/
+.venv/
+
+# Local configuration and secrets
 .env
+.env.local
+SMTP.txt
+SMTP.local.txt
 
-# VS Code
+# Local SQLite files
+database/*.db
+database/*.db-wal
+database/*.db-shm
+
+# Editor and OS files
 .vscode/
-
-# OS files
 .DS_Store
 Thumbs.db
 
-# Logs
+# Logs and caches
 *.log
-
-# MySQL dumps (optional)
-*.sql
+.pytest_cache/
+.sfdx/

@@ -40,6 +40,7 @@ def send_registration_otp(name: str, email: str) -> Dict[str, Any]:
             "otp": str(otp_code),
             "name": normalized_name,
             "verified": False,
+            "purpose": "registration",
             "expires_at": datetime.utcnow() + timedelta(minutes=OTP_TTL_MINUTES),
         }
 
@@ -66,6 +67,8 @@ def verify_registration_otp(email: str, otp_input: str) -> Dict[str, Any]:
     record = otp_store.get(normalized_email)
     if not record:
         return {"status": "error", "data": {}, "message": "OTP not found or expired"}
+    if record.get("purpose") != "registration":
+        return {"status": "error", "data": {}, "message": "Invalid OTP purpose"}
 
     expires_at = record.get("expires_at")
     if not expires_at or datetime.utcnow() > expires_at:
@@ -94,7 +97,7 @@ def complete_registration(email: str, password: str) -> Dict[str, Any]:
     normalized_email = email.strip().lower()
     _cleanup_expired_otps()
     record = otp_store.get(normalized_email)
-    if not record:
+    if not record or record.get("purpose") != "registration":
         return {"status": "error", "data": {}, "message": "OTP verification required"}
     if not record.get("verified"):
         return {"status": "error", "data": {}, "message": "OTP verification required"}
@@ -133,6 +136,7 @@ def login(email: str, password: str) -> Dict[str, Any]:
         return {"status": "error", "data": {}, "message": "Invalid email"}
 
     try:
+        email = email.strip().lower()
         row = fetch_one("SELECT id, name, email, password_hash, created_at FROM users WHERE email=%s", (email,))
         if not row:
             return {"status": "error", "data": {}, "message": "Invalid credentials"}
@@ -167,8 +171,8 @@ def update_profile(user_id: int, name: str) -> Dict[str, Any]:
 def change_password(user_id: int, current_password: str, new_password: str) -> Dict[str, Any]:
     if not current_password or not new_password:
         return {"status": "error", "data": {}, "message": "Current and new password are required"}
-    if len(new_password) < 6:
-        return {"status": "error", "data": {}, "message": "New password must be at least 6 characters"}
+    if len(new_password) < 8:
+        return {"status": "error", "data": {}, "message": "New password must be at least 8 characters"}
     try:
         row = fetch_one("SELECT password_hash FROM users WHERE id=%s", (int(user_id),))
         if not row:
@@ -185,20 +189,53 @@ def change_password(user_id: int, current_password: str, new_password: str) -> D
 
 
 def reset_password(email: str, new_password: str) -> Dict[str, Any]:
+    _cleanup_expired_otps()
     if not email or not new_password:
         return {"status": "error", "data": {}, "message": "Email and new password are required"}
     if not schemas.validate_email(email):
         return {"status": "error", "data": {}, "message": "Invalid email"}
-    if len(new_password) < 6:
-        return {"status": "error", "data": {}, "message": "Password must be at least 6 characters"}
+    if len(new_password) < 8:
+        return {"status": "error", "data": {}, "message": "Password must be at least 8 characters"}
+    normalized_email = email.strip().lower()
+    record = otp_store.get(normalized_email)
+    if not record or record.get("purpose") != "password_reset" or not record.get("verified"):
+        return {"status": "error", "data": {}, "message": "Verify the email OTP before changing the password"}
     try:
-        user = fetch_one("SELECT id FROM users WHERE email=%s", (email,))
-        if not user:
-            return {"status": "error", "data": {}, "message": "No account found with that email"}
         new_hash = hash_password(new_password)
-        execute("UPDATE users SET password_hash=%s WHERE email=%s", (new_hash, email))
+        execute("UPDATE users SET password_hash=%s WHERE email=%s", (new_hash, normalized_email))
+        otp_store.pop(normalized_email, None)
         return {"status": "success", "data": {}, "message": "Password reset successfully"}
     except DatabaseError as e:
         return {"status": "error", "data": {}, "message": f"DB error: {e}"}
     except Exception:
         return {"status": "error", "data": {}, "message": "Password reset failed"}
+
+
+def send_password_reset_otp(email: str) -> Dict[str, Any]:
+    normalized_email = (email or "").strip().lower()
+    if not schemas.validate_email(normalized_email):
+        return {"status": "error", "data": {}, "message": "Enter a valid email"}
+    try:
+        if not fetch_one("SELECT id FROM users WHERE email=%s", (normalized_email,)):
+            return {"status": "error", "data": {}, "message": "No account found with that email"}
+        code = generate_otp()
+        sent, err = send_otp_email(normalized_email, code)
+        if not sent:
+            return {"status": "error", "data": {}, "message": f"Failed to send OTP: {err}"}
+        otp_store[normalized_email] = {"otp": str(code), "verified": False, "purpose": "password_reset", "expires_at": datetime.utcnow() + timedelta(minutes=OTP_TTL_MINUTES)}
+        return {"status": "success", "data": {}, "message": "Reset code sent"}
+    except DatabaseError as e:
+        return {"status": "error", "data": {}, "message": f"DB error: {e}"}
+
+
+def verify_password_reset_otp(email: str, otp_input: str) -> Dict[str, Any]:
+    normalized_email = (email or "").strip().lower()
+    _cleanup_expired_otps()
+    record = otp_store.get(normalized_email)
+    if not record or record.get("purpose") != "password_reset":
+        return {"status": "error", "data": {}, "message": "OTP not found or expired"}
+    if str(record.get("otp")) != str(otp_input).strip():
+        return {"status": "error", "data": {}, "message": "Invalid OTP"}
+    record["verified"] = True
+    record["otp"] = None
+    return {"status": "success", "data": {}, "message": "Email verified"}

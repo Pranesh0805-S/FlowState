@@ -59,8 +59,9 @@ class AppWindow(QWidget):
         super().__init__()
         self.api = ApiClient()
         self.pending_verification_email: str = ""
-        self.setWindowTitle("Productivity Automation System")
-        self.setMinimumSize(1366, 768)
+        self.setWindowTitle("Flowstate | Personal Productivity")
+        self.setMinimumSize(1120, 700)
+        self.resize(1440, 900)
 
         self.stack = QStackedWidget()
 
@@ -120,7 +121,7 @@ class AppWindow(QWidget):
         self.navigate("login")
 
     def notify(self, message: str, title: str = "Info"):
-        self.setWindowTitle(f"Productivity Automation System | {title}: {message}")
+        self.setWindowTitle(f"Flowstate | {title}: {message}")
 
     def ensure_logged_in(self) -> bool:
         return bool(self.api.token and self.api.user)

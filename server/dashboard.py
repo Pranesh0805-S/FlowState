@@ -24,10 +24,15 @@ def get_metrics(user_id: int) -> Dict[str, Any]:
             updated_at = t.get("updated_at")
             if priority == "high":
                 high_priority_count += 1
-            if due and due < today and status != "completed":
+            if due and str(due)[:10] < today.isoformat() and status != "completed":
                 overdue_count += 1
             if status == "completed":
                 completed_total += 1
+                if isinstance(updated_at, str):
+                    try:
+                        updated_at = datetime.fromisoformat(updated_at)
+                    except ValueError:
+                        updated_at = None
                 if isinstance(updated_at, datetime):
                     upd_date = updated_at.date()
                     if upd_date == today:

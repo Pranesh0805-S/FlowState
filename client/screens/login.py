@@ -11,6 +11,7 @@ class LoginScreen(BaseScreen):
 
     def __init__(self, app_window, api):
         super().__init__(app_window, api)
+        self.setObjectName("AuthPage")
 
         card = QFrame()
         card.setObjectName("AuthCard")

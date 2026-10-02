@@ -1,53 +1,27 @@
-## Productivity Automation System (PyQt5 + MySQL)
+# Flowstate
 
-### What this is
-A desktop Productivity Automation System built with **Python + PyQt5** and a **MySQL** backend (no web frameworks).  
-The client talks to backend logic via:
+Flowstate is a desktop task and workflow manager built with Python and PyQt5. It includes an authenticated task board, calendar, activity timeline, dashboard, team workspaces, email OTP registration, and password recovery.
 
-`response = server.main.handle_request(action, payload)`
+## Stack
 
-Responses always follow:
+- Python 3.10+
+- PyQt5 desktop client
+- SQLite database (built in; no server installation)
+- bcrypt password hashing and signed session tokens
 
-```json
-{ "status": "success/error", "data": { }, "message": "text" }
-```
+## Run locally
 
-### Project layout
-Matches the required structure under `ProductivityAutomationSystem/`.
+1. Install Python 3.10 or newer.
+2. Install packages: `python -m pip install -r requirements.txt`.
+3. Copy `.env.example` to `.env` and configure email settings if you want OTP emails.
+4. Start the application: `python client/main.py`.
 
-### Setup
-- **Python**: 3.10+ recommended
-- **MySQL**: create a database (e.g. `productivity_automation`)
+The database initializes automatically at `database/productivity.db`. To store it elsewhere, set `PRODUCTIVITY_DB_PATH` to an absolute file path. Existing MySQL databases are not imported automatically; export and migrate your records before switching if they contain data you need.
 
-1) Install dependencies
+## Email OTP setup
 
-```bash
-pip install -r requirements.txt
-```
+Set `PRODUCTIVITY_SMTP_EMAIL` and `PRODUCTIVITY_SMTP_APP_PASSWORD` to an SMTP sender account and app password. Optional settings are `PRODUCTIVITY_SMTP_HOST` and `PRODUCTIVITY_SMTP_PORT`. Without SMTP configuration, registration and password recovery requiring OTP will report that email delivery is unavailable.
 
-2) Create tables
-- Open `database/schema.sql` and run it in your MySQL client (Workbench / CLI).
+## Security and data
 
-3) Configure DB connection
-Set environment variables (Windows PowerShell example):
-
-```powershell
-$env=PRODUCTIVITY_DB_HOST="localhost"
-$env=PRODUCTIVITY_DB_PORT="3306"
-$env=PRODUCTIVITY_DB_USER="root"
-$env=PRODUCTIVITY_DB_PASSWORD="your_password"
-$env=PRODUCTIVITY_DB_NAME="productivity_automation"
-$env=PRODUCTIVITY_JWT_SECRET="change_me"
-```
-
-### Run
-From inside `ProductivityAutomationSystem/`:
-
-```bash
-python client/main.py
-```
-
-### Notes
-- The backend is **in-process** (imported by the client) and uses MySQL via `mysql-connector-python`.
-- If the DB connection fails, the UI will show backend error messages so you can fix credentials/schema.
-
+Passwords are stored as bcrypt hashes. Recovery requires an email OTP. The local SQLite file is private app data and should not be committed. Configure `PRODUCTIVITY_JWT_SECRET` to a long, random value for sessions. `.env` is local-only and ignored by Git.

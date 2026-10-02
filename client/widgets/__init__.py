@@ -1,4 +1,4 @@
-"""Widget components for the Productivity Automation System."""
+"""Reusable widget components for Flowstate."""
 
 from .kanban_column import KanbanColumn
 from .nav_bar import NavBar

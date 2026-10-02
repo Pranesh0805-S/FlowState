@@ -11,6 +11,7 @@ class ForgotPasswordScreen(BaseScreen):
 
     def __init__(self, app_window, api):
         super().__init__(app_window, api)
+        self.setObjectName("AuthPage")
 
         card = QFrame()
         card.setObjectName("AuthCard")
@@ -34,12 +35,24 @@ class ForgotPasswordScreen(BaseScreen):
 
         self.email = QLineEdit()
         self.email.setPlaceholderText("Email")
+        self.otp = QLineEdit()
+        self.otp.setPlaceholderText("6-digit email verification code")
+        self.otp.setMaxLength(6)
+        self.otp_btn = QPushButton("Send verification code")
+        self.otp_btn.setObjectName("SecondaryBtn")
+        self.otp_btn.clicked.connect(self.send_otp)
+        self.verify_btn = QPushButton("Verify email")
+        self.verify_btn.setObjectName("SecondaryBtn")
+        self.verify_btn.clicked.connect(self.verify_otp)
+        self.new_pw_verified = False
         self.new_pw = QLineEdit()
         self.new_pw.setPlaceholderText("New password")
         self.new_pw.setEchoMode(QLineEdit.Password)
+        self.new_pw.setEnabled(False)
         self.confirm_pw = QLineEdit()
         self.confirm_pw.setPlaceholderText("Confirm password")
         self.confirm_pw.setEchoMode(QLineEdit.Password)
+        self.confirm_pw.setEnabled(False)
 
         reset_btn = QPushButton("Set New Password")
         reset_btn.setObjectName("GradientBtn")
@@ -54,6 +67,9 @@ class ForgotPasswordScreen(BaseScreen):
         form.addWidget(subtitle)
         form.addWidget(self.status)
         form.addWidget(self.email)
+        form.addWidget(self.otp)
+        form.addWidget(self.otp_btn)
+        form.addWidget(self.verify_btn)
         form.addWidget(self.new_pw)
         form.addWidget(self.confirm_pw)
         form.addWidget(reset_btn)
@@ -73,9 +89,35 @@ class ForgotPasswordScreen(BaseScreen):
 
     def on_show(self):
         self.status.setText("")
+        self.status.setStyleSheet("color:#667085;")
         self.email.clear()
         self.new_pw.clear()
         self.confirm_pw.clear()
+        self.otp.clear()
+        self.new_pw_verified = False
+        self.new_pw.setEnabled(False)
+        self.confirm_pw.setEnabled(False)
+        self.otp.setEnabled(True)
+        self.otp_btn.setEnabled(True)
+        self.verify_btn.setEnabled(True)
+
+    def send_otp(self):
+        res = self.api.call("auth.send_password_reset_otp", {"email": self.email.text().strip()})
+        self.status.setText(res.get("message", "Could not send verification code."))
+        if res.get("status") == "success":
+            self.status.setStyleSheet("color:#16A34A; font-weight:600;")
+
+    def verify_otp(self):
+        res = self.api.call("auth.verify_password_reset_otp", {"email": self.email.text().strip(), "otp": self.otp.text().strip()})
+        self.status.setText(res.get("message", "Could not verify code."))
+        if res.get("status") == "success":
+            self.new_pw_verified = True
+            self.new_pw.setEnabled(True)
+            self.confirm_pw.setEnabled(True)
+            self.otp.setEnabled(False)
+            self.otp_btn.setEnabled(False)
+            self.verify_btn.setEnabled(False)
+            self.status.setStyleSheet("color:#16A34A; font-weight:600;")
 
     def do_reset(self):
         email = self.email.text().strip()
@@ -91,8 +133,11 @@ class ForgotPasswordScreen(BaseScreen):
         if new_pw != confirm:
             self.status.setText("Passwords do not match.")
             return
-        if len(new_pw) < 6:
-            self.status.setText("Password must be at least 6 characters.")
+        if len(new_pw) < 8:
+            self.status.setText("Password must be at least 8 characters.")
+            return
+        if not self.new_pw_verified:
+            self.status.setText("Verify the email code before resetting the password.")
             return
 
         self.status.setText("Updating password...")
@@ -101,5 +146,6 @@ class ForgotPasswordScreen(BaseScreen):
             self.status.setText(res.get("message", "Reset failed."))
             return
         self.status.setText("Password updated. You can log in now.")
+        self.status.setStyleSheet("color:#16A34A; font-weight:600;")
         self.new_pw.clear()
         self.confirm_pw.clear()

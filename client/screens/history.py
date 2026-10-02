@@ -89,7 +89,7 @@ class HistoryScreen(AuthenticatedScreen):
         top.addStretch(1)
         top.addWidget(badge)
 
-        details = QLabel(f"{event.get('timestamp', '')} | status: {event.get('status', '')}")
+        details = QLabel(f"{event.get('event', 'Activity')} · {event.get('timestamp', '')} · status: {event.get('status', '')}")
         details.setObjectName("Muted")
         details.setWordWrap(True)
 
@@ -109,7 +109,9 @@ class HistoryScreen(AuthenticatedScreen):
             return "Created", "#2563EB", "●"
         if st == "completed" or ev == "completed":
             return "Completed", "#16A34A", "✓"
-        if ev in ("updated", "moved", "status_changed"):
+        if ev.startswith("moved"):
+            return "Moved", "#7C3AED", "↔"
+        if ev in ("updated", "status_changed"):
             return "Updated", "#F59E0B", "↻"
         return "Updated", "#F59E0B", "↻"
 

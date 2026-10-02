@@ -52,8 +52,10 @@ def overdue_scan_and_log(user_id: int) -> None:
         )
         for r in rows:
             due = r.get("due_date")
-            if due and due < today:
-                log_event(int(r["id"]), "overdue")
+            if due and str(due)[:10] < today.isoformat():
+                prior = fetch_all("SELECT id FROM history WHERE task_id=%s AND event='overdue' AND timestamp >= date('now','-1 day')", (int(r["id"]),))
+                if not prior:
+                    log_event(int(r["id"]), "overdue")
     except Exception:
         return
 

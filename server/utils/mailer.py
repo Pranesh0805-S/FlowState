@@ -14,7 +14,7 @@ def send_otp_email(email: str, otp_code: str) -> Tuple[bool, str]:
         return False, "SMTP credentials not configured"
 
     msg = EmailMessage()
-    msg["Subject"] = "Your OTP for Productivity Automation System"
+    msg["Subject"] = "Your Flowstate verification code"
     msg["From"] = sender
     msg["To"] = email
     msg.set_content(

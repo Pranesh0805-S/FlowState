@@ -90,15 +90,16 @@ def create_task(payload: Dict[str, Any]) -> Dict[str, Any]:
         )
 
         task = fetch_one("SELECT * FROM tasks WHERE id=%s", (task_id,))
+        log_event(int(task_id), "created")
         return {"status": "success", "data": {"task": task}, "message": "Task created"}
 
     except DatabaseError as e:
         return {"status": "error", "data": {}, "message": f"DB error: {e}"}
 
 
-def update_task(task_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
+def update_task(user_id: int, task_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
     try:
-        existing = fetch_one("SELECT * FROM tasks WHERE id=%s", (int(task_id),))
+        existing = fetch_one("SELECT * FROM tasks WHERE id=%s AND user_id=%s", (int(task_id), int(user_id)))
         if not existing:
             return {"status": "error", "data": {}, "message": "Task not found"}
 
@@ -125,6 +126,8 @@ def update_task(task_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
         # ✅ recalculate priority if needed
         if any(k in fields for k in ("due_date", "estimated_minutes", "urgent")):
             due = fields.get("due_date", existing.get("due_date"))
+            if isinstance(due, str):
+                due = schemas.parse_date(due[:10])
             est = fields.get("estimated_minutes", existing.get("estimated_minutes"))
             urg = fields.get("urgent", existing.get("urgent"))
             fields["priority"] = calculate_priority(due, est, urg)
@@ -137,7 +140,9 @@ def update_task(task_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
 
         set_sql = ", ".join([f"{k}=%s" for k in fields.keys()])
         params = list(fields.values()) + [int(task_id)]
-        execute(f"UPDATE tasks SET {set_sql} WHERE id=%s", tuple(params))
+        params.append(int(user_id))
+        execute(f"UPDATE tasks SET {set_sql}, updated_at=CURRENT_TIMESTAMP WHERE id=%s AND user_id=%s", tuple(params))
+        log_event(int(task_id), "updated")
 
         task = fetch_one("SELECT * FROM tasks WHERE id=%s", (int(task_id),))
         return {"status": "success", "data": {"task": task}, "message": "Task updated"}
@@ -148,12 +153,12 @@ def update_task(task_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "error", "data": {}, "message": "Update failed"}
 
 
-def move_task(task_id: int, new_status: str) -> Dict[str, Any]:
+def move_task(user_id: int, task_id: int, new_status: str) -> Dict[str, Any]:
     if new_status not in schemas.ALLOWED_STATUSES:
         return {"status": "error", "data": {}, "message": "Invalid status"}
 
     try:
-        task = fetch_one("SELECT * FROM tasks WHERE id=%s", (int(task_id),))
+        task = fetch_one("SELECT * FROM tasks WHERE id=%s AND user_id=%s", (int(task_id), int(user_id)))
         if not task:
             return {"status": "error", "data": {}, "message": "Task not found"}
 
@@ -168,10 +173,10 @@ def move_task(task_id: int, new_status: str) -> Dict[str, Any]:
         if new_status != current and new_status not in allowed.get(current, set()):
             return {"status": "error", "data": {}, "message": f"Invalid transition {current} -> {new_status}"}
 
-        execute("UPDATE tasks SET status=%s WHERE id=%s", (new_status, int(task_id)))
+        execute("UPDATE tasks SET status=%s, updated_at=CURRENT_TIMESTAMP WHERE id=%s AND user_id=%s", (new_status, int(task_id), int(user_id)))
 
-        if new_status == "completed":
-            log_event(int(task_id), "completed")
+        if new_status != current:
+            log_event(int(task_id), f"moved:{current}->{new_status}")
 
         task2 = fetch_one("SELECT * FROM tasks WHERE id=%s", (int(task_id),))
         return {"status": "success", "data": {"task": task2}, "message": "Moved"}
@@ -180,13 +185,13 @@ def move_task(task_id: int, new_status: str) -> Dict[str, Any]:
         return {"status": "error", "data": {}, "message": f"DB error: {e}"}
 
 
-def delete_task(task_id: int) -> Dict[str, Any]:
+def delete_task(user_id: int, task_id: int) -> Dict[str, Any]:
     try:
-        existing = fetch_one("SELECT id FROM tasks WHERE id=%s", (int(task_id),))
+        existing = fetch_one("SELECT id FROM tasks WHERE id=%s AND user_id=%s", (int(task_id), int(user_id)))
         if not existing:
             return {"status": "error", "data": {}, "message": "Task not found"}
 
-        execute("DELETE FROM tasks WHERE id=%s", (int(task_id),))
+        execute("DELETE FROM tasks WHERE id=%s AND user_id=%s", (int(task_id), int(user_id)))
         return {"status": "success", "data": {}, "message": "Task deleted"}
 
     except DatabaseError as e:
@@ -203,7 +208,7 @@ def list_tasks(user_id: int, include_overdue_flag: bool = True) -> Dict[str, Any
         if include_overdue_flag:
             for r in rows:
                 due = r.get("due_date")
-                r["overdue"] = bool(due and due < date.today() and r.get("status") != "completed")
+                r["overdue"] = bool(due and str(due)[:10] < date.today().isoformat() and r.get("status") != "completed")
 
         return {"status": "success", "data": {"tasks": rows}, "message": "OK"}
 

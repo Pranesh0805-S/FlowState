@@ -1,8 +1,8 @@
 QWidget {
   font-family: "Segoe UI";
   font-size: 13px;
-  color: #101828;
-  background: #f3f5fb;
+  color: #182230;
+  background: #f5f7fb;
 }
 
 #HeroCard {
@@ -28,7 +28,7 @@ QLabel#Muted {
 }
 
 #Sidebar {
-  background: #101828;
+  background: #17243a;
   border-top-right-radius: 18px;
   border-bottom-right-radius: 18px;
 }
@@ -57,7 +57,7 @@ QPushButton#SidebarNavBtn:hover {
 }
 
 QPushButton#SidebarNavBtn[active="true"] {
-  background: #5b6eff;
+  background: #635bdb;
   color: #ffffff;
 }
 
@@ -103,20 +103,20 @@ QPushButton:hover {
 }
 
 QPushButton#PrimaryBtn {
-  background: #5b6eff;
-  border: 1px solid #5b6eff;
+  background: #635bdb;
+  border: 1px solid #635bdb;
   color: #ffffff;
   font-weight: 700;
 }
 
 QPushButton#PrimaryBtn:hover {
-  background: #4c5fff;
+  background: #5149c2;
 }
 
 QPushButton#SecondaryBtn {
   background: #ffffff;
-  border: 1px solid #5b6eff;
-  color: #5b6eff;
+  border: 1px solid #635bdb;
+  color: #635bdb;
   font-weight: 600;
 }
 
@@ -124,17 +124,17 @@ QPushButton#GradientBtn {
   color: #ffffff;
   border: none;
   font-weight: 700;
-  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #5b6eff, stop:1 #4f46e5);
+  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #756ef0, stop:1 #5149c2);
 }
 
 QPushButton#GradientBtn:hover {
-  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4f46e5, stop:1 #4338ca);
+  background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #625bd4, stop:1 #433da8);
 }
 
 QPushButton#LinkBtn {
   border: none;
   background: transparent;
-  color: #5b6eff;
+  color: #635bdb;
   padding: 4px 6px;
 }
 
@@ -150,7 +150,7 @@ QLineEdit, QTextEdit, QComboBox, QDateEdit, QSpinBox {
 }
 
 QLineEdit:focus, QTextEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus {
-  border: 1px solid #5b6eff;
+  border: 1px solid #635bdb;
 }
 
 QScrollArea {
@@ -159,7 +159,7 @@ QScrollArea {
 }
 
 #ProfileAvatar {
-  background: #5b6eff;
+  background: #635bdb;
   color: #ffffff;
   border-radius: 48px;
   font-size: 34px;
@@ -187,4 +187,18 @@ QLabel#TaskPriorityBadge {
   border-radius: 10px;
   padding: 2px 8px;
   font-size: 11px;
+}
+
+QWidget#AuthPage {
+  background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #eef0ff, stop:0.55 #f8f9ff, stop:1 #e6f2fb);
+}
+
+#AuthCard {
+  border: 1px solid #e4e7f3;
+  border-radius: 18px;
+}
+
+#KanbanColumn:hover, #BoardColumn:hover {
+  border: 1px solid #c6c2ff;
+  background: #fbfbff;
 }

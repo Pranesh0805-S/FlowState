@@ -2,18 +2,19 @@
 Notification service — desktop (plyer) + email (smtplib).
 """
 
+import os
 import smtplib
 import threading
 from email.mime.text import MIMEText
 
 # ─── App name shown in desktop notifications ───────────────────────────────
-APP_NAME = "Productivity Automation System"
+APP_NAME = "Flowstate"
 
 # ─── CONFIGURE YOUR SENDER EMAIL HERE ─────────────────────────────────────
-SMTP_HOST = "smtp.gmail.com"
-SMTP_PORT = 587
-SENDER_EMAIL = "your_app_email@gmail.com"   # ← change this
-SENDER_PASSWORD = "your_app_password"        # ← use Gmail App Password
+SMTP_HOST = os.getenv("PRODUCTIVITY_SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("PRODUCTIVITY_SMTP_PORT", "587"))
+SENDER_EMAIL = os.getenv("PRODUCTIVITY_SMTP_EMAIL", "")
+SENDER_PASSWORD = os.getenv("PRODUCTIVITY_SMTP_APP_PASSWORD", "")
 # ──────────────────────────────────────────────────────────────────────────
 
 
@@ -29,7 +30,7 @@ class NotificationService:
                 notification.notify(
                     title=title,
                     message=message,
-                    app_name=APP_NAME,   # ← shows "Productivity Automation System"
+                    app_name=APP_NAME,
                     timeout=5,
                 )
             except Exception as e:
@@ -49,6 +50,8 @@ class NotificationService:
     ):
         """Send an email notification (non-blocking)."""
         def _send():
+            if not sender_email or not sender_password:
+                return
             try:
                 msg = MIMEText(body, "plain")
                 msg["Subject"] = subject
