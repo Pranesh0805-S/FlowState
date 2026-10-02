@@ -1,5 +1,6 @@
 """REST API for the Flowstate web client. Run with `uvicorn server.api:app`."""
 from pathlib import Path
+import os
 from typing import Any, Dict, Optional
 
 from dotenv import load_dotenv
@@ -18,9 +19,14 @@ from .utils import jwt
 
 
 app = FastAPI(title="Flowstate API", version="1.0.0", docs_url="/api/docs")
+allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+web_origin = os.getenv("WEB_ORIGIN", "").strip().rstrip("/")
+if web_origin:
+    allowed_origins.append(web_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],

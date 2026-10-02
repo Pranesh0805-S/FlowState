@@ -1,4 +1,4 @@
-"""Small SQLite data layer; the application works without a database server."""
+"""SQLite for local development and PostgreSQL for hosted deployments."""
 import os
 import sqlite3
 from contextlib import contextmanager
@@ -10,12 +10,21 @@ class DatabaseError(Exception):
     pass
 
 
+def _database_url() -> str:
+    return os.getenv("DATABASE_URL", "").strip()
+
+
 def _database_path() -> Path:
     configured = os.getenv("PRODUCTIVITY_DB_PATH")
     return Path(configured).expanduser() if configured else Path(__file__).resolve().parents[1] / "database" / "productivity.db"
 
 
-def _connect() -> sqlite3.Connection:
+def _connect():
+    if _database_url():
+        import psycopg
+        from psycopg.rows import dict_row
+
+        return psycopg.connect(_database_url(), row_factory=dict_row, connect_timeout=10)
     path = _database_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(path), timeout=10)
@@ -25,19 +34,35 @@ def _connect() -> sqlite3.Connection:
     return conn
 
 
+def _is_postgres() -> bool:
+    return bool(_database_url())
+
+
+def _postgres_schema() -> str:
+    return Path(__file__).resolve().parents[1].joinpath("database", "schema.postgres.sql").read_text(encoding="utf-8")
+
+
 def initialize() -> None:
-    schema = Path(__file__).resolve().parents[1] / "database" / "schema.sql"
     try:
-        with _connect() as conn:
-            conn.executescript(schema.read_text(encoding="utf-8"))
-            columns = {row[1] for row in conn.execute("PRAGMA table_info(teams)").fetchall()}
-            if "created_by" not in columns:
-                conn.execute("ALTER TABLE teams ADD COLUMN created_by INTEGER REFERENCES users(id) ON DELETE CASCADE")
-                conn.execute(
-                    "UPDATE teams SET created_by=(SELECT user_id FROM team_members WHERE team_id=teams.id ORDER BY id LIMIT 1) WHERE created_by IS NULL"
-                )
-    except (sqlite3.Error, OSError) as exc:
-        raise DatabaseError(str(exc)) from exc
+        if _is_postgres():
+            with get_conn() as conn:
+                for statement in _postgres_schema().split(";"):
+                    if statement.strip():
+                        conn.execute(statement)
+        else:
+            schema = Path(__file__).resolve().parents[1] / "database" / "schema.sql"
+            with _connect() as conn:
+                conn.executescript(schema.read_text(encoding="utf-8"))
+                columns = {row[1] for row in conn.execute("PRAGMA table_info(teams)").fetchall()}
+                if "created_by" not in columns:
+                    conn.execute("ALTER TABLE teams ADD COLUMN created_by INTEGER REFERENCES users(id) ON DELETE CASCADE")
+                    conn.execute(
+                        "UPDATE teams SET created_by=(SELECT user_id FROM team_members WHERE team_id=teams.id ORDER BY id LIMIT 1) WHERE created_by IS NULL"
+                    )
+    except Exception as exc:
+        if isinstance(exc, (sqlite3.Error, OSError)) or exc.__class__.__module__.startswith("psycopg"):
+            raise DatabaseError(str(exc)) from exc
+        raise
 
 
 @contextmanager
@@ -47,18 +72,21 @@ def get_conn():
         conn = _connect()
         yield conn
         conn.commit()
-    except sqlite3.Error as exc:
+    except Exception as exc:
         if conn:
             conn.rollback()
-        raise DatabaseError(str(exc)) from exc
+        if isinstance(exc, (sqlite3.Error,)) or exc.__class__.__module__.startswith("psycopg"):
+            raise DatabaseError(str(exc)) from exc
+        raise
     finally:
         if conn:
             conn.close()
 
 
 def _query(query: str) -> str:
-    # Keep existing parameterized query call sites portable while using sqlite.
-    return query.replace("%s", "?").replace("INSERT IGNORE", "INSERT OR IGNORE")
+    if _is_postgres():
+        return query.replace("date('now','-1 day')", "CURRENT_TIMESTAMP - INTERVAL '1 day'")
+    return query.replace("%s", "?")
 
 
 def fetch_one(query: str, params: Optional[Tuple[Any, ...]] = None) -> Optional[Dict[str, Any]]:
@@ -74,7 +102,13 @@ def fetch_all(query: str, params: Optional[Tuple[Any, ...]] = None) -> List[Dict
 
 def execute(query: str, params: Optional[Tuple[Any, ...]] = None) -> int:
     with get_conn() as conn:
-        cursor = conn.execute(_query(query), params or ())
+        sql = _query(query)
+        if _is_postgres() and sql.lstrip().upper().startswith("INSERT ") and " RETURNING " not in sql.upper():
+            sql = sql.rstrip().rstrip(";") + " RETURNING id"
+        cursor = conn.execute(sql, params or ())
+        if _is_postgres():
+            row = cursor.fetchone() if cursor.description else None
+            return int(row["id"]) if row and row.get("id") is not None else 0
         return int(cursor.lastrowid or 0)
 
 

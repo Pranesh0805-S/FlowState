@@ -35,11 +35,11 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Email verification
 
-Email OTP is used for account registration and password recovery. Configure `PRODUCTIVITY_SMTP_EMAIL` and `PRODUCTIVITY_SMTP_APP_PASSWORD` in the root `.env.local`. Optional values are `PRODUCTIVITY_SMTP_HOST` and `PRODUCTIVITY_SMTP_PORT`. The app creates a persistent local signing key in `database/.session_signing_key` if `PRODUCTIVITY_JWT_SECRET` is not configured.
+Email OTP is used for account registration and password recovery. Locally, you can configure the `PRODUCTIVITY_SMTP_*` values in the root `.env.local`. For a free Render deployment, use Resend's HTTPS API: set `RESEND_API_KEY` and `RESEND_FROM_EMAIL`. Configure a verified sender domain in Resend before sending OTPs to users. Render Free blocks outbound SMTP ports, so Gmail SMTP is not suitable there. The app creates a persistent local signing key in `database/.session_signing_key` if `PRODUCTIVITY_JWT_SECRET` is not configured.
 
 ## Data and migration
 
-SQLite initializes automatically at `database/productivity.db`, or use `PRODUCTIVITY_DB_PATH` to select another path. Existing MySQL data is not imported automatically. Export and migrate records first if you need to keep them.
+SQLite initializes automatically at `database/productivity.db` for local development. If `DATABASE_URL` is configured, the API uses PostgreSQL and creates its schema automatically. Existing SQLite/MySQL data is not imported automatically; export and migrate records first if you need to keep them.
 
 ## API documentation
 
@@ -47,7 +47,7 @@ With the API running, open [http://127.0.0.1:8000/api/docs](http://127.0.0.1:800
 
 ## Deploy (Vercel frontend + Render API)
 
-The root `render.yaml` defines the FastAPI service, health check, generated JWT secret, SMTP settings, and a persistent disk for SQLite. Create a Render Blueprint from this repository and provide the two SMTP values when prompted. The API uses one paid Render instance because persistent disks are not available on free web services.
+The root `render.yaml` defines a **Free** Render FastAPI service with no paid disk. Create a free PostgreSQL database with Neon, copy its pooled connection string into Render's `DATABASE_URL`, and set `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `WEB_ORIGIN` when Render prompts for them. Neon Free currently provides up to 1 GB per project and 100 compute hours per month; check its current quota before launch. Render Free services sleep after 15 minutes without traffic, so the first request after idle can take about a minute. Render Free's own PostgreSQL expires after 30 days, so this setup uses Neon for persistent storage instead.
 
 In Vercel, import the same repository and set the project Root Directory to `web`. Add `API_SERVER_URL` in the Vercel project environment variables, with the Render service URL followed by `/api` (for example, `https://flowstate-api.onrender.com/api`). Keep the local `.env.local` files out of Git.
 
