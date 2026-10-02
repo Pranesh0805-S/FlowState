@@ -18,7 +18,12 @@ def _send_via_resend(email: str, otp_code: str, api_key: str, sender: str) -> Tu
     request = Request(
         "https://api.resend.com/emails",
         data=json.dumps(body).encode("utf-8"),
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            # Resend rejects requests without a User-Agent (HTTP 403, code 1010).
+            "User-Agent": "Flowstate/1.0",
+        },
         method="POST",
     )
     try:
