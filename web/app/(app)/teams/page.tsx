@@ -4,11 +4,14 @@ import { useEffect,useMemo,useState } from "react";
 import { api,formatDate,STATUS_LABELS,type Task } from "@/lib/api";
 import { ArrowRight,FolderKanban,Mail,Plus,Users } from "@/components/icons";
 import { useShell } from "@/components/app-shell";
+import { useLiveRefresh } from "@/lib/use-live-refresh";
 
 type Team={team_id:number;name:string;created_at:string};
 export default function TeamsPage(){const [teams,setTeams]=useState<Team[]>([]);const [selected,setSelected]=useState<number|null>(null);const [teamTasks,setTeamTasks]=useState<Task[]>([]);const [myTasks,setMyTasks]=useState<Task[]>([]);const [name,setName]=useState("");const [invite,setInvite]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");const {notify}=useShell();
   async function loadTeams(){const data=await api<{teams:Team[]}>("teams");setTeams(data.teams);const first=data.teams[0]?.team_id??null;setSelected(first);if(first)await loadTasks(first);}
   async function loadTasks(teamId:number){const [team,personal]=await Promise.all([api<{tasks:Task[]}>(`teams/${teamId}/tasks`),api<{tasks:Task[]}>("tasks")]);setTeamTasks(team.tasks);setMyTasks(personal.tasks.filter(t=>t.status!=="completed"));}
+  async function refresh(){const data=await api<{teams:Team[]}>("teams");setTeams(data.teams);const teamId=data.teams.some(team=>team.team_id===selected)?selected:data.teams[0]?.team_id??null;if(teamId!==selected)setSelected(teamId);if(teamId)await loadTasks(teamId);else{setTeamTasks([]);setMyTasks([]);}}
+  useLiveRefresh(refresh);
   useEffect(()=>{let active=true;api<{teams:Team[]}>("teams").then(data=>{if(!active)return;setTeams(data.teams);const first=data.teams[0]?.team_id??null;setSelected(first);if(first)api<{tasks:Task[]}>(`teams/${first}/tasks`).then(result=>{if(active)setTeamTasks(result.tasks);}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Could not load team tasks");});}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Could not load teams");});api<{tasks:Task[]}>("tasks").then(data=>{if(active)setMyTasks(data.tasks.filter(t=>t.status!=="completed"));}).catch(()=>undefined);return()=>{active=false;};},[]);
   const active=useMemo(()=>teams.find(team=>team.team_id===selected),[teams,selected]);
   async function create(event:React.FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError("");try{await api("teams",{method:"POST",body:JSON.stringify({name})});setName("");await loadTeams();notify("Your team space is ready");}catch(e){setError(e instanceof Error?e.message:"Could not create team");}finally{setBusy(false);}}

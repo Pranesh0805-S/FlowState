@@ -5,10 +5,12 @@ import { api,formatDate,PRIORITY_CLASS,STATUS_LABELS,type Task } from "@/lib/api
 import { CalendarDays,Check,Flag,ListFilter,MoreHorizontal,Plus,Search,Trash2 } from "@/components/icons";
 import { TaskDialog } from "@/components/task-dialog";
 import { useShell } from "@/components/app-shell";
+import { useLiveRefresh } from "@/lib/use-live-refresh";
 
 type Filter="all"|"open"|"completed"|"high";
 export default function TasksPage(){const [tasks,setTasks]=useState<Task[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [filter,setFilter]=useState<Filter>("all");const [query,setQuery]=useState("");const [dialog,setDialog]=useState(false);const [editing,setEditing]=useState<Task|undefined>();const {notify}=useShell();
   async function refresh(){try{const result=await api<{tasks:Task[]}>("tasks");setTasks(result.tasks);setError("");}catch(e){setError(e instanceof Error?e.message:"Could not load tasks");}finally{setLoading(false);}}
+  useLiveRefresh(refresh);
   useEffect(()=>{let active=true;api<{tasks:Task[]}>("tasks").then(result=>{if(active){setTasks(result.tasks);setError("");}}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Could not load tasks");}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
   const filtered=useMemo(()=>tasks.filter(t=>(filter==="all"||filter==="open"&&t.status!=="completed"||filter==="completed"&&t.status==="completed"||filter==="high"&&t.priority==="high")&&`${t.title} ${t.description||""} ${t.category||""}`.toLowerCase().includes(query.toLowerCase())).sort((a,b)=>a.status===b.status?(a.due_date||"9999").localeCompare(b.due_date||"9999"):a.status==="completed"?1:-1),[tasks,filter,query]);
   async function remove(task:Task){if(!window.confirm(`Delete “${task.title}”? This cannot be undone.`))return;try{await api(`tasks/${task.id}`,{method:"DELETE"});notify("Task deleted");await refresh();}catch(e){notify(e instanceof Error?e.message:"Could not delete task");}}

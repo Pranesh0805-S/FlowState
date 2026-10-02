@@ -6,12 +6,14 @@ import { api, formatDate, relativeTime, type Task } from "@/lib/api";
 import { Activity, ArrowRight, ArrowUpRight, CalendarDays, Check, CheckCheck, Clock3, Flag, Plus, Target, TrendingUp } from "@/components/icons";
 import { TaskDialog } from "@/components/task-dialog";
 import { useShell } from "@/components/app-shell";
+import { useLiveRefresh } from "@/lib/use-live-refresh";
 
 type Metrics={tasks_completed_today:number;tasks_completed_week:number;overdue_count:number;high_priority_count:number;completion_rate:number};type ActivityItem={id:number;task_id:number;event:string;timestamp:string;title:string;status:string};
 const blank:Metrics={tasks_completed_today:0,tasks_completed_week:0,overdue_count:0,high_priority_count:0,completion_rate:0};
 export default function DashboardPage(){
   const {user,notify}=useShell();const [metrics,setMetrics]=useState(blank);const [tasks,setTasks]=useState<Task[]>([]);const [activity,setActivity]=useState<ActivityItem[]>([]);const [loading,setLoading]=useState(true);const [dialog,setDialog]=useState(false);const [error,setError]=useState("");
   async function refresh(){try{const [m,t,h]=await Promise.all([api<Metrics>("dashboard"),api<{tasks:Task[]}>("tasks"),api<{items:ActivityItem[]}>("history?limit=5")]);setMetrics(m);setTasks(t.tasks);setActivity(h.items);}catch(e){setError(e instanceof Error?e.message:"Could not load your workspace");}finally{setLoading(false);}}
+  useLiveRefresh(refresh);
   useEffect(()=>{let active=true;Promise.all([api<Metrics>("dashboard"),api<{tasks:Task[]}>("tasks"),api<{items:ActivityItem[]}>("history?limit=5")]).then(([m,t,h])=>{if(active){setMetrics(m);setTasks(t.tasks);setActivity(h.items);}}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Could not load your workspace");}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
   const completed=tasks.filter(t=>t.status==="completed").length;const completion=tasks.length?Math.round(completed/tasks.length*100):0;const next=tasks.filter(t=>t.status!=="completed").slice(0,4);
   const week=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const done=tasks.filter(t=>t.status==="completed"&&new Date(t.updated_at.replace(" ","T")+"Z").toDateString()===d.toDateString()).length;return{day:new Intl.DateTimeFormat("en",{weekday:"short"}).format(d),done,total:Math.max(done,Math.ceil(tasks.filter(t=>t.status!=="completed").length/7))};});

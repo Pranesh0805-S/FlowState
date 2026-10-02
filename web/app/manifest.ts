@@ -1,0 +1,19 @@
+import type { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Flowstate — Plan with clarity",
+    short_name: "Flowstate",
+    description: "A calmer workspace for tasks, teams, and focused progress.",
+    start_url: "/dashboard",
+    id: "/",
+    scope: "/",
+    display: "standalone",
+    background_color: "#f7f8f4",
+    theme_color: "#182a22",
+    icons: [
+      { src: "/icons/flowstate-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/flowstate-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
+}
