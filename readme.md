@@ -44,3 +44,9 @@ SQLite initializes automatically at `database/productivity.db`, or use `PRODUCTI
 ## API documentation
 
 With the API running, open [http://127.0.0.1:8000/api/docs](http://127.0.0.1:8000/api/docs).
+
+## Deploy (Vercel frontend + Render API)
+
+The root `render.yaml` defines the FastAPI service, health check, generated JWT secret, SMTP settings, and a persistent disk for SQLite. Create a Render Blueprint from this repository and provide the two SMTP values when prompted. The API uses one paid Render instance because persistent disks are not available on free web services.
+
+In Vercel, import the same repository and set the project Root Directory to `web`. Add `API_SERVER_URL` in the Vercel project environment variables, with the Render service URL followed by `/api` (for example, `https://flowstate-api.onrender.com/api`). Keep the local `.env.local` files out of Git.

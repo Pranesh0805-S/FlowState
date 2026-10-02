@@ -45,9 +45,10 @@ async function proxy(request: NextRequest, context: Context) {
 
   const response = NextResponse.json(payload, { status: upstream.status });
   if (endpoint === "auth/login" && upstream.ok) {
-    const data = payload.data as Record<string, unknown> | undefined;
-    const sessionToken = data?.token;
-    if (data && typeof sessionToken === "string") {
+    // FastAPI's _result() unwraps the auth result, so login returns
+    // { token, user } at the top level rather than under `data`.
+    const sessionToken = payload.token;
+    if (typeof sessionToken === "string") {
       response.cookies.set(SESSION, sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -55,7 +56,7 @@ async function proxy(request: NextRequest, context: Context) {
         path: "/",
         maxAge: 60 * 60 * 24,
       });
-      delete data.token;
+      delete payload.token;
     }
   }
   return response;
