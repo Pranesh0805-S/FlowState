@@ -30,6 +30,17 @@ def assign_member(requester_id: int, team_id: int, user_id: int) -> Dict[str, An
         return {"status": "error", "data": {}, "message": f"DB error: {e}"}
 
 
+def assign_member_by_email(requester_id: int, team_id: int, email: str) -> Dict[str, Any]:
+    normalized_email = (email or "").strip().lower()
+    try:
+        user = fetch_one("SELECT id FROM users WHERE email=%s", (normalized_email,))
+        if not user:
+            return {"status": "error", "data": {}, "message": "No Flowstate account found for that email"}
+        return assign_member(requester_id, team_id, int(user["id"]))
+    except DatabaseError as e:
+        return {"status": "error", "data": {}, "message": f"DB error: {e}"}
+
+
 def assign_task(user_id: int, team_id: int, task_id: int) -> Dict[str, Any]:
     try:
         team = fetch_one("SELECT id FROM teams WHERE id=%s AND created_by=%s", (int(team_id), int(user_id)))

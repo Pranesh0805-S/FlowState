@@ -3,7 +3,9 @@ import hashlib
 import hmac
 import json
 import os
+import secrets
 import time
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 
@@ -17,7 +19,17 @@ def _b64url_decode(data: str) -> bytes:
 
 
 def _secret() -> bytes:
-    return os.getenv("PRODUCTIVITY_JWT_SECRET", "dev_secret_change_me").encode("utf-8")
+    configured = os.getenv("PRODUCTIVITY_JWT_SECRET")
+    if configured:
+        return configured.encode("utf-8")
+    key_path = Path(__file__).resolve().parents[2] / "database" / ".session_signing_key"
+    key_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with key_path.open("xb") as key_file:
+            key_file.write(secrets.token_bytes(48))
+    except FileExistsError:
+        pass
+    return key_path.read_bytes()
 
 
 def encode(payload: Dict[str, Any], exp_seconds: int = 60 * 60 * 24) -> str:

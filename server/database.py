@@ -30,6 +30,12 @@ def initialize() -> None:
     try:
         with _connect() as conn:
             conn.executescript(schema.read_text(encoding="utf-8"))
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(teams)").fetchall()}
+            if "created_by" not in columns:
+                conn.execute("ALTER TABLE teams ADD COLUMN created_by INTEGER REFERENCES users(id) ON DELETE CASCADE")
+                conn.execute(
+                    "UPDATE teams SET created_by=(SELECT user_id FROM team_members WHERE team_id=teams.id ORDER BY id LIMIT 1) WHERE created_by IS NULL"
+                )
     except (sqlite3.Error, OSError) as exc:
         raise DatabaseError(str(exc)) from exc
 

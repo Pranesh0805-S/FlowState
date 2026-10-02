@@ -1,27 +1,46 @@
 # Flowstate
 
-Flowstate is a desktop task and workflow manager built with Python and PyQt5. It includes an authenticated task board, calendar, activity timeline, dashboard, team workspaces, email OTP registration, and password recovery.
+Flowstate is a responsive productivity workspace for tasks, planning, and small teams. The frontend is built with Next.js 16 and React 19. A Python FastAPI service exposes the task, authentication, team, calendar, dashboard, and activity APIs. SQLite runs locally with no separate database server.
 
-## Stack
+## Start the application
 
-- Python 3.10+
-- PyQt5 desktop client
-- SQLite database (built in; no server installation)
-- bcrypt password hashing and signed session tokens
+Use two terminals from the repository root.
 
-## Run locally
+### One-time setup
 
-1. Install Python 3.10 or newer.
-2. Install packages: `python -m pip install -r requirements.txt`.
-3. Copy `.env.example` to `.env` and configure email settings if you want OTP emails.
-4. Start the application: `python client/main.py`.
+```powershell
+python -m pip install -r requirements.txt
+cd web
+npm install
+```
 
-The database initializes automatically at `database/productivity.db`. To store it elsewhere, set `PRODUCTIVITY_DB_PATH` to an absolute file path. Existing MySQL databases are not imported automatically; export and migrate your records before switching if they contain data you need.
+Copy `web/.env.example` to `web/.env.local` if you want to point the frontend to a non-default API URL. The default API URL is `http://127.0.0.1:8000/api`.
 
-## Email OTP setup
+### Terminal 1 — API
 
-Set `PRODUCTIVITY_SMTP_EMAIL` and `PRODUCTIVITY_SMTP_APP_PASSWORD` to an SMTP sender account and app password. Optional settings are `PRODUCTIVITY_SMTP_HOST` and `PRODUCTIVITY_SMTP_PORT`. Without SMTP configuration, registration and password recovery requiring OTP will report that email delivery is unavailable.
+From the repository root:
 
-## Security and data
+```powershell
+python -m uvicorn server.api:app --reload --host 127.0.0.1 --port 8000
+```
 
-Passwords are stored as bcrypt hashes. Recovery requires an email OTP. The local SQLite file is private app data and should not be committed. Configure `PRODUCTIVITY_JWT_SECRET` to a long, random value for sessions. `.env` is local-only and ignored by Git.
+### Terminal 2 — web app
+
+```powershell
+cd web
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Email verification
+
+Email OTP is used for account registration and password recovery. Configure `PRODUCTIVITY_SMTP_EMAIL` and `PRODUCTIVITY_SMTP_APP_PASSWORD` in the root `.env.local`. Optional values are `PRODUCTIVITY_SMTP_HOST` and `PRODUCTIVITY_SMTP_PORT`. The app creates a persistent local signing key in `database/.session_signing_key` if `PRODUCTIVITY_JWT_SECRET` is not configured.
+
+## Data and migration
+
+SQLite initializes automatically at `database/productivity.db`, or use `PRODUCTIVITY_DB_PATH` to select another path. Existing MySQL data is not imported automatically. Export and migrate records first if you need to keep them.
+
+## API documentation
+
+With the API running, open [http://127.0.0.1:8000/api/docs](http://127.0.0.1:8000/api/docs).

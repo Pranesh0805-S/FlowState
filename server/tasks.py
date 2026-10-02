@@ -8,6 +8,14 @@ from .database import DatabaseError, execute, fetch_all, fetch_one
 from .history import log_event
 
 
+STATUS_TRANSITIONS = {
+    "backlog": {"in_progress"},
+    "in_progress": {"backlog", "blocked", "completed"},
+    "blocked": {"in_progress", "completed"},
+    "completed": {"in_progress"},
+}
+
+
 def _parse_due(due_date: Optional[str]) -> Optional[date]:
     if not due_date:
         return None
@@ -109,13 +117,16 @@ def update_task(user_id: int, task_id: int, payload: Dict[str, Any]) -> Dict[str
             if payload.get(k) not in (None, ""):
                 fields[k] = payload[k]
 
-        if payload.get("description") is not None:
-            fields["description"] = payload.get("description")
+        if "description" in payload:
+            fields["description"] = payload.get("description") or None
 
-        if payload.get("due_date") is not None:
+        if "category" in payload:
+            fields["category"] = (payload.get("category") or "").strip() or None
+
+        if "due_date" in payload:
             fields["due_date"] = _parse_due(payload.get("due_date"))
 
-        if payload.get("duration_estimated") is not None:
+        if "duration_estimated" in payload:
             est = payload.get("duration_estimated")
             fields["estimated_minutes"] = int(est) if est not in (None, "") else None
 
@@ -134,6 +145,8 @@ def update_task(user_id: int, task_id: int, payload: Dict[str, Any]) -> Dict[str
 
         if "status" in fields and fields["status"] not in schemas.ALLOWED_STATUSES:
             return {"status": "error", "data": {}, "message": "Invalid status"}
+        if "status" in fields and fields["status"] != existing.get("status") and fields["status"] not in STATUS_TRANSITIONS.get(existing.get("status"), set()):
+            return {"status": "error", "data": {}, "message": "Invalid status transition"}
 
         if not fields:
             return {"status": "success", "data": {"task": existing}, "message": "No changes"}
@@ -162,15 +175,8 @@ def move_task(user_id: int, task_id: int, new_status: str) -> Dict[str, Any]:
         if not task:
             return {"status": "error", "data": {}, "message": "Task not found"}
 
-        allowed = {
-            "backlog": {"in_progress"},
-            "in_progress": {"blocked", "completed"},
-            "blocked": {"in_progress", "completed"},
-            "completed": set(),
-        }
-
         current = task.get("status")
-        if new_status != current and new_status not in allowed.get(current, set()):
+        if new_status != current and new_status not in STATUS_TRANSITIONS.get(current, set()):
             return {"status": "error", "data": {}, "message": f"Invalid transition {current} -> {new_status}"}
 
         execute("UPDATE tasks SET status=%s, updated_at=CURRENT_TIMESTAMP WHERE id=%s AND user_id=%s", (new_status, int(task_id), int(user_id)))

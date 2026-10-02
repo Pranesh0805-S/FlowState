@@ -7,6 +7,9 @@ __pycache__/
 # Virtual environments
 venv/
 .venv/
+node_modules/
+.next/
+web/next-env.d.ts
 
 # Local configuration and secrets
 .env
@@ -18,6 +21,7 @@ SMTP.local.txt
 database/*.db
 database/*.db-wal
 database/*.db-shm
+database/.session_signing_key
 
 # Editor and OS files
 .vscode/
