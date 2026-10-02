@@ -55,10 +55,17 @@ export function formatDate(value?: string | null) {
   const parsed = new Date(`${value.slice(0, 10)}T12:00:00`);
   return Number.isNaN(parsed.getTime()) ? value : new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(parsed);
 }
-export function relativeTime(value?: string) {
+export function relativeTime(value?: string | null) {
   if (!value) return "";
-  const date = new Date(value.replace(" ", "T") + (value.endsWith("Z") ? "" : "Z"));
-  const minutes = Math.round((date.getTime() - Date.now()) / 60000);
+  // Database drivers can serialize timestamps as either a UTC string, a
+  // timezone-offset string, or a naive SQL timestamp. Only add UTC to the
+  // last form; appending `Z` to an existing offset makes the date invalid.
+  const normalized = value.trim().replace(" ", "T");
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+  const date = new Date(hasTimezone ? normalized : `${normalized}Z`);
+  const timestamp = date.getTime();
+  if (!Number.isFinite(timestamp)) return "";
+  const minutes = Math.round((timestamp - Date.now()) / 60000);
   const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
   if (Math.abs(minutes) < 60) return formatter.format(minutes, "minute");
   const hours = Math.round(minutes / 60);
