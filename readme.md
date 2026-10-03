@@ -51,15 +51,12 @@ The root `render.yaml` defines a **Free** Render FastAPI service with no paid di
 
 In Vercel, import the same repository and set the project Root Directory to `web`. Add `API_SERVER_URL` in the Vercel project environment variables, with the Render service URL followed by `/api` (for example, `https://flowstate-api.onrender.com/api`). Keep the local `.env.local` files out of Git.
 
-## Install on Android
+## Android app
 
-The responsive web app includes an installable web manifest and Flowstate icons. After the HTTPS Vercel deployment is live, open it in Chrome on Android and choose **Install app** or **Add to Home screen**. The installed app and desktop site use the same hosted frontend and Render account data; while a workspace page is open, task and activity views refresh every 12 seconds and refresh again when the app returns to the foreground.
+`mobile/android` is a native Android client. Its screens are rendered with Android views and it connects to the same authenticated API used by the web client at `https://flowstate-pranesh0805.vercel.app/api/`. The Android client includes sign-in, registration and email verification, password reset, dashboard, task editing and status changes, workflow board, calendar, activity, team spaces, profile updates, password changes, and sign-out. The Android session cookie is stored in the app's private preferences and is not included in Android backups.
 
-To package the deployed PWA as an APK, first deploy it to its final domain. Then use Bubblewrap with the deployed manifest URL:
+Open `mobile/android` in Android Studio, select an emulator or connected phone, and click **Run**. The Vercel frontend and API configuration must be deployed and reachable for sign-in and synced data to work. To point the client at a different deployment, update `BASE_URL` in `mobile/android/app/src/main/java/com/pranesh/flowstate/ApiClient.java`.
 
-```powershell
-npx @bubblewrap/cli init --manifest="https://YOUR_VERCEL_DOMAIN/manifest.webmanifest" --directory="mobile/android"
-npx @bubblewrap/cli build --manifest="mobile/android"
-```
+The dashboard offers the current sideload APK at `/downloads/flowstate-android.apk`; committing to `main` makes it available after the connected Vercel project deploys. The APK is debug-signed for direct installation and requires Android 6.0 (API 23) or later. For Play Store publication or stable in-place upgrades across future releases, create and securely retain a private release signing key, then publish a release-signed APK or Android App Bundle.
 
-Bubblewrap needs Android build tools and creates a signing key during setup. Keep that key and its passwords private. For a full-screen Trusted Web Activity, publish Bubblewrap's generated Digital Asset Links JSON at `/.well-known/assetlinks.json` on the same Vercel domain. This URL and signing certificate are created only after your first deployment and APK setup.
+The `web` directory remains the browser-based companion app; it shares accounts and data with the native Android app.

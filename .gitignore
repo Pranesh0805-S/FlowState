@@ -28,6 +28,13 @@ database/.session_signing_key
 .DS_Store
 Thumbs.db
 
+# Android Studio local state, generated output, and signing material
+**/.gradle/
+**/.idea/
+**/build/
+**/local.properties
+mobile/android/*.keystore
+
 # Logs and caches
 *.log
 .pytest_cache/

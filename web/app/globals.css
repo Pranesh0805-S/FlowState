@@ -92,6 +92,18 @@ button{color:inherit}
 .task-row-modern:hover { background-color: #fbfcfa; }
 .modal-backdrop { animation: flow-enter .18s ease both; }
 .modal { animation: flow-pop .24s cubic-bezier(.2,.7,.2,1) both; }
+.modal-backdrop{padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));background:rgba(24,42,34,.34);backdrop-filter:blur(5px)}
+.modal{border:1px solid rgba(37,76,52,.07);border-radius:20px;box-shadow:0 22px 70px rgba(18,36,25,.16);max-height:calc(100dvh - 28px)}
+.duration-field{border:0;padding:0;margin:0;display:flex;align-items:end;gap:9px;min-width:0}
+.duration-field legend{font-size:12px;font-weight:700;color:#3b4940;margin-bottom:7px}
+.duration-field label{display:grid;gap:6px;flex:1;min-width:0;font-size:10px;color:#89948b}
+.duration-field input{width:100%;min-width:0;border:1px solid #dfe4dc;background:#fff;border-radius:9px;padding:10px 12px;color:var(--ink);outline:none}
+.duration-field input:focus{border-color:#71a181;box-shadow:0 0 0 3px rgba(91,142,105,.13)}
+.duration-separator{padding-bottom:10px;color:#89948b;font-weight:700}
+.android-download{display:flex;align-items:center;gap:16px;padding:20px 22px;margin-top:16px;background:#f4f7f0;border-color:#e6ecdf}
+.android-download-mark{height:42px;width:42px;flex:0 0 42px;border-radius:13px;display:grid;place-items:center;background:#dcebcf;color:#315b3d;font-weight:800}
+.android-download-copy{flex:1;min-width:0}.android-download-copy h2{font-size:16px;margin:3px 0}.android-download-copy p{font-size:11px;color:var(--muted);margin:4px 0 0}.android-download .btn{flex:0 0 auto}.android-unsupported{color:#a33d38!important;font-weight:700}.android-disabled{font-size:11px;font-weight:700;color:#a33d38}
+@media(max-width:600px){.modal{padding:19px;border-radius:17px}.duration-field{gap:6px}.android-download{align-items:flex-start;flex-wrap:wrap}.android-download-copy{flex-basis:calc(100% - 60px)}.android-download .btn,.android-disabled{margin-left:58px}.android-download .btn{min-height:38px}}
 .toast { animation: flow-pop .22s cubic-bezier(.2,.7,.2,1) both; }
 button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   outline: 3px solid rgba(91,142,105,.42);

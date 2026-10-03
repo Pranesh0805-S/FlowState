@@ -5,8 +5,57 @@ import { api, type Task } from "@/lib/api";
 import { X } from "@/components/icons";
 
 export function TaskDialog({ task, onClose, onSaved }: { task?: Task; onClose: () => void; onSaved: (message: string) => void }) {
-  const [title,setTitle]=useState(task?.title||"");const [description,setDescription]=useState(task?.description||"");const [category,setCategory]=useState(task?.category||"");const [dueDate,setDueDate]=useState(task?.due_date||"");const [estimate,setEstimate]=useState(task?.estimated_minutes?.toString()||"");const [urgent,setUrgent]=useState(Boolean(task?.urgent));const [busy,setBusy]=useState(false);const [error,setError]=useState("");
-  useEffect(()=>{function onKey(event:KeyboardEvent){if(event.key==="Escape")onClose();}window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey);},[onClose]);
-  async function submit(event:React.FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError("");const body={title:title.trim(),description:description.trim()||null,category:category.trim()||null,due_date:dueDate||null,duration_estimated:estimate?Number(estimate):null,urgency_flag:urgent};try{await api(task?`tasks/${task.id}`:"tasks",{method:task?"PATCH":"POST",body:JSON.stringify(body)});onSaved(task?"Task updated":"Task added to your workspace");}catch(e){setError(e instanceof Error?e.message:"Could not save task");}finally{setBusy(false);}}
-  return <div className="modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)onClose();}}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title"><div className="modal-head"><div><h2 id="task-dialog-title">{task?"Edit task":"Add a task"}</h2><p>Keep the next step clear and manageable.</p></div><button type="button" className="modal-close" onClick={onClose} aria-label="Close dialog"><X size={16}/></button></div><form onSubmit={submit}><div className="form-grid"><div className="field field-span"><label htmlFor="task-title">Task name</label><input id="task-title" autoFocus maxLength={255} required placeholder="What needs to get done?" value={title} onChange={e=>setTitle(e.target.value)}/></div><div className="field field-span"><label htmlFor="task-description">Notes <span className="optional-label">Optional</span></label><textarea id="task-description" maxLength={10000} placeholder="Add context or a helpful next step…" value={description} onChange={e=>setDescription(e.target.value)}/></div><div className="field"><label htmlFor="task-category">Category <span className="optional-label">Optional</span></label><input id="task-category" maxLength={120} placeholder="e.g. Product, Study" value={category} onChange={e=>setCategory(e.target.value)}/></div><div className="field"><label htmlFor="task-due">Due date <span className="optional-label">Optional</span></label><input id="task-due" type="date" value={dueDate||""} onChange={e=>setDueDate(e.target.value)}/></div><div className="field"><label htmlFor="task-estimate">Time estimate</label><div className="estimate-wrap"><input id="task-estimate" type="number" min={0} max={100000} placeholder="30" value={estimate} onChange={e=>setEstimate(e.target.value)}/><span>minutes</span></div></div><label className="urgent-toggle"><input type="checkbox" checked={urgent} onChange={e=>setUrgent(e.target.checked)}/><span className="custom-check"/><span><strong>Mark as urgent</strong><small>Moves this into high priority</small></span></label></div>{error&&<div className="message message-error modal-error" role="alert">{error}</div>}<div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button><button className="btn" disabled={busy}>{busy?"Saving…":task?"Save changes":"Create task"}</button></div></form></section></div>;
+  const estimate = task?.estimated_minutes ?? null;
+  const [title, setTitle] = useState(task?.title || "");
+  const [description, setDescription] = useState(task?.description || "");
+  const [category, setCategory] = useState(task?.category || "");
+  const [dueDate, setDueDate] = useState(task?.due_date || "");
+  const [hours, setHours] = useState(estimate === null ? "" : String(Math.floor(estimate / 60)));
+  const [minutes, setMinutes] = useState(estimate === null ? "" : String(estimate % 60));
+  const [urgent, setUrgent] = useState(Boolean(task?.urgent));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) { if (event.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const totalMinutes = (Number(hours) || 0) * 60 + (Number(minutes) || 0);
+    const body = {
+      title: title.trim(), description: description.trim() || null,
+      category: category.trim() || null, due_date: dueDate || null,
+      duration_estimated: hours || minutes ? totalMinutes : null,
+      urgency_flag: urgent,
+    };
+    try {
+      await api(task ? `tasks/${task.id}` : "tasks", {
+        method: task ? "PATCH" : "POST", body: JSON.stringify(body),
+      });
+      onSaved(task ? "Task updated" : "Task added to your workspace");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save task");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="modal" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title">
+      <div className="modal-head"><div><h2 id="task-dialog-title">{task ? "Edit task" : "Add a task"}</h2><p>Keep the next step clear and manageable.</p></div><button type="button" className="modal-close" onClick={onClose} aria-label="Close dialog"><X size={16}/></button></div>
+      <form onSubmit={submit}><div className="form-grid">
+        <div className="field field-span"><label htmlFor="task-title">Task name</label><input id="task-title" autoFocus maxLength={255} required placeholder="What needs to get done?" value={title} onChange={e => setTitle(e.target.value)}/></div>
+        <div className="field field-span"><label htmlFor="task-description">Notes <span className="optional-label">Optional</span></label><textarea id="task-description" maxLength={10000} placeholder="Add context or a helpful next step…" value={description} onChange={e => setDescription(e.target.value)}/></div>
+        <div className="field"><label htmlFor="task-category">Category <span className="optional-label">Optional</span></label><input id="task-category" maxLength={120} placeholder="e.g. Product, Study" value={category} onChange={e => setCategory(e.target.value)}/></div>
+        <div className="field"><label htmlFor="task-due">Due date <span className="optional-label">Optional</span></label><input id="task-due" type="date" value={dueDate || ""} onChange={e => setDueDate(e.target.value)}/></div>
+        <fieldset className="duration-field"><legend>Time estimate</legend><label>Hours<input aria-label="Estimated hours" type="number" min={0} max={100000} placeholder="0" value={hours} onChange={e => setHours(e.target.value)}/></label><span className="duration-separator">:</span><label>Minutes<input aria-label="Estimated minutes" type="number" min={0} max={59} placeholder="0" value={minutes} onChange={e => setMinutes(e.target.value)}/></label></fieldset>
+        <label className="urgent-toggle"><input type="checkbox" checked={urgent} onChange={e => setUrgent(e.target.checked)}/><span className="custom-check"/><span><strong>Mark as urgent</strong><small>Moves this into high priority</small></span></label>
+      </div>{error && <div className="message message-error modal-error" role="alert">{error}</div>}<div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button><button className="btn" disabled={busy}>{busy ? "Saving…" : task ? "Save changes" : "Create task"}</button></div></form>
+    </section>
+  </div>;
 }

@@ -23,6 +23,7 @@ export function useLiveRefresh(refresh: () => void | Promise<void>, intervalMs =
     const timer = window.setInterval(run, intervalMs);
     window.addEventListener("focus", run);
     document.addEventListener("visibilitychange", run);
+    run();
     return () => {
       window.clearInterval(timer);
       window.removeEventListener("focus", run);

@@ -11,6 +11,7 @@ export async function api<T = Record<string, unknown>>(path: string, options: Re
     ...options,
     headers: { "content-type": "application/json", ...options.headers },
     cache: "no-store",
+    signal: options.signal ?? AbortSignal.timeout(30_000),
   });
   if (response.status === 204) return undefined as T;
   const payload = await response.json().catch(() => ({}));

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { api, type User } from "@/lib/api";
-import { Activity, Bell, CalendarDays, CheckCheck, ChevronDown, CircleHelp, FolderKanban, LayoutDashboard, ListTodo, LogOut, Menu, Plus, Settings2, Sparkles, Users, X } from "@/components/icons";
+import { Activity, Bell, CalendarDays, CheckCheck, ChevronDown, CircleHelp, FolderKanban, LayoutDashboard, ListTodo, LogOut, Menu, Settings2, Sparkles, Users, X } from "@/components/icons";
 
 type ShellContextValue = { user: User | null; refreshUser: () => Promise<void>; notify: (message: string) => void };
 const ShellContext = createContext<ShellContextValue | null>(null);
@@ -96,7 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {mobileOpen && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileOpen(false)}/>}
         <main className="main-area">
           <header className="topbar"><button className="icon-btn mobile-menu" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={19}/></button><div className="crumb"><span>Workspace</span><span className="crumb-sep">/</span><strong>{title[1]}</strong></div><div className="topbar-right"><span className="today-label">{new Intl.DateTimeFormat("en", { weekday: "long", month: "short", day: "numeric" }).format(new Date())}</span><button className="icon-btn notification-btn" title="Notifications" onClick={() => notify("You’re all caught up")}><Bell size={17}/><i/></button><Link href="/settings" className="top-avatar" title="Account settings">{(user.name || "F").slice(0,1).toUpperCase()}</Link></div></header>
-          <div className="content-area"><div key={pathname} className="route-content"><div className="page-context"><div><div className="eyebrow">{title[0]}</div></div>{pathname !== "/settings" && <Link href="/tasks" className="btn top-add"><Plus size={16}/> Add a task</Link>}</div>{children}</div></div>
+          <div className="content-area"><div key={pathname} className="route-content"><div className="page-context"><div><div className="eyebrow">{title[0]}</div></div></div>{children}</div></div>
         </main>
       </div>
       {toast && <div className="toast" role="status">{toast}</div>}
